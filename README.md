@@ -1,6 +1,6 @@
 # Starlink Windows Stats Dashboard
 
-[![Release Version](https://img.shields.io/badge/version-v0.0.11-cyan.svg)](https://github.com/kttnz/Starlink-Stats-GUI-Windows)
+[![Release Version](https://img.shields.io/badge/version-v0.0.12-cyan.svg)](https://github.com/kttnz/Starlink-Stats-GUI-Windows)
 [![Platform](https://img.shields.io/badge/platform-Windows_10_/_11-blue.svg)](#)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 
@@ -22,22 +22,19 @@ A high-performance, real-time Windows GUI application packaged as an MSIX instal
 
 ## Getting Started & Installation
 
-To run this dashboard on your Windows machine, download the latest version from your releases and follow these installation steps:
+To run this dashboard on your Windows machine, choose one of the two methods below:
 
-### 1. Trust the Developer Certificate
-Because the installer uses a self-signed developer certificate, you must add the certificate to your trusted certificate store:
-1. Locate **`StarlinkStatsCert.pfx`** (or run `install_cert.ps1` as Administrator).
-2. Alternatively, right-click **`install_cert.ps1`** and select **Run with PowerShell** (this elevates to administrator automatically and imports the developer certificate to your computer's `Trusted People` store).
+### Method A: Portable Standalone ZIP (Recommended - No Certificates Needed)
+1. Download the portable zip file: **`Starlink-Windows-Stats-v.0.0.12.zip`**.
+2. Right-click the downloaded file and select **Extract All...** to extract it to a directory of your choice.
+3. Open the extracted folder and double-click **`starlink_stats.exe`** to launch!
+> [!TIP]
+> This method does not require installing developer certificates, turning on developer settings, or registering Windows app package registries.
 
-### 2. Enable Windows Sideloading
-1. Open Windows **Settings** (Win + I).
-2. Go to **Update & Security** > **For Developers** (or search for "Developer settings").
-3. Toggle on **Sideload apps** or **Developer Mode**.
-
-### 3. Install the MSIX Package
-1. Double-click the file: **`Starlink-Windows-Stats-v.0.0.11.msix`**.
-2. Click **Install**.
-3. Launch from your Start Menu!
+### Method B: MSIX Windows Installer Package (Requires Developer Certificate)
+1. **Trust the Certificate**: Right-click the script **`install_cert.ps1`** and select **Run with PowerShell** (this elevates to administrator automatically and imports the developer certificate to your computer's `Trusted People` store).
+2. **Enable Sideloading**: Go to Windows **Settings** > **Update & Security** > **For Developers** and enable **Sideload apps** or **Developer Mode**.
+3. **Install App**: Double-click **`Starlink-Windows-Stats-v.0.0.12.msix`** and click **Install**.
 
 ---
 

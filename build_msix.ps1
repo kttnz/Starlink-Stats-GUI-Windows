@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 
 # Constants
 $AppName = "starlink_stats"
-$Version = "0.0.11"
+$Version = "0.0.12"
 $MsixName = "Starlink-Windows-Stats-v.${Version}.msix"
 $PackageRootDir = "package_root"
 $PfxPath = "StarlinkStatsCert.pfx"
@@ -119,20 +119,24 @@ if (-not (Test-Path $SignTool)) {
 Write-Host "Package signed successfully." -ForegroundColor Gray
 
 # Step 6: Cleanup temporary build directories
-Write-Host "`n[Step 6/6] Cleaning up build directories..." -ForegroundColor Green
+Write-Host "`n[Step 6/7] Cleaning up build directories..." -ForegroundColor Green
 if (Test-Path $PackageRootDir) {
     Remove-Item -Recurse -Force $PackageRootDir
 }
-# Keep dist/ and build/ just in case they want to run it, but clean dist to keep directory tidy
 Write-Host "Cleanup complete." -ForegroundColor Gray
 
+# Step 7: Compress portable standalone ZIP package
+$ZipName = "Starlink-Windows-Stats-v.${Version}.zip"
+Write-Host "`n[Step 7/7] Compressing portable standalone ZIP archive..." -ForegroundColor Green
+if (Test-Path $ZipName) {
+    Remove-Item -Force $ZipName -ErrorAction SilentlyContinue
+}
+Compress-Archive -Path "dist/$AppName" -DestinationPath $ZipName -Force
+Write-Host "Portable ZIP created: $ZipName" -ForegroundColor Gray
+
 Write-Host "`n=======================================================" -ForegroundColor Cyan
-Write-Host "SUCCESS: $MsixName has been built and signed!" -ForegroundColor Cyan
+Write-Host "SUCCESS: Starlink Windows Stats v${Version} has been built!" -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
-Write-Host "`nTo install the application:"
-Write-Host "1. Double-click the PFX file '$PfxPath' to import the certificate."
-Write-Host "2. Choose 'Local Machine' as Store Location, enter password '$PfxPassword'."
-Write-Host "3. Place the certificate in the 'Trusted People' certificate store."
-Write-Host "4. Enable Windows sideloading in Windows Settings (Update & Security > For Developers > Sideload apps)."
-Write-Host "5. Double-click '$MsixName' to install and launch the dashboard!"
+Write-Host "1. MSIX Package (Requires Developer Cert): $MsixName"
+Write-Host "2. Portable Standalone ZIP (No Installer Needed): $ZipName"
 Write-Host "=======================================================" -ForegroundColor Cyan

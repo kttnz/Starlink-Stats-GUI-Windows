@@ -565,7 +565,7 @@ def main():
     print(f"Loading UI from: {html_path}")
     
     window = webview.create_window(
-        title="Starlink Windows Stats - v0.0.11",
+        title="Starlink Windows Stats - v0.0.12",
         url=html_path,
         js_api=api,
         width=1280,

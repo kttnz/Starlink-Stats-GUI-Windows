@@ -9,7 +9,7 @@
   <Identity 
     Name="StarlinkWindowsStats" 
     Publisher="CN=StarlinkWindowsStatsPublisher" 
-    Version="0.0.11.0" 
+    Version="0.0.12.0" 
     ProcessorArchitecture="x64" />
 
   <Properties>
