@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlink Windows Stats</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation & Control Panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-container">
+                    <div class="logo-glow"></div>
+                    <span class="logo-icon">🛰️</span>
+                </div>
+                <div>
+                    <h1>STARLINK</h1>
+                    <span class="version-badge">v0.0.11</span>
+                </div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="status-panel">
+                <div class="status-indicator">
+                    <span class="pulse-dot" id="status-dot"></span>
+                    <span class="status-text" id="status-mode">SIMULATION</span>
+                </div>
+                <div class="status-meta">
+                    <div class="meta-row">
+                        <span class="meta-label">IP Address</span>
+                        <input type="text" id="ip-input" class="ip-textbox" value="192.168.100.1:9200">
+                    </div>
+                    <div class="meta-row">
+                        <span class="meta-label">Dish Status</span>
+                        <span class="meta-val highlight-green" id="dish-state">CONNECTED</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Section -->
+            <div class="sidebar-section">
+                <h3>DISHY CONTROLS</h3>
+                <div class="action-grid">
+                    <button class="btn btn-primary" id="btn-reboot">REBOOT DISH</button>
+                    <button class="btn btn-secondary" id="btn-stow">STOW DISH</button>
+                </div>
+            <!-- Advanced Config Section -->
+            <div class="sidebar-section">
+                <h3>ADVANCED CONFIG</h3>
+                <div class="control-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label class="switch-label" style="font-size: 11px; color: #94a3b8;">Heating / Snow Melt</label>
+                    <select id="select-heating" class="sidebar-select" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 600; padding: 4px 6px; border-radius: 6px; outline: none; width: 110px;">
+                        <option value="AUTO">AUTOMATIC</option>
+                        <option value="ALWAYS_ON">ALWAYS ON</option>
+                        <option value="ALWAYS_OFF">ALWAYS OFF</option>
+                    </select>
+                </div>
+                <div class="sleep-schedule-box" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 10px;">
+                    <div class="toggle-row" style="margin-bottom: 8px;">
+                        <label class="switch-label"><strong>Sleep Standby</strong></label>
+                        <label class="switch">
+                            <input type="checkbox" id="sleep-schedule-enable">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="time-range-row" style="display: flex; justify-content: space-between; gap: 8px;">
+                        <div class="time-input-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8;">
+                            <span>From</span>
+                            <select id="sleep-start-hour" class="time-select" style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 2px 4px; border-radius: 4px; outline: none; font-size: 10px;">
+                                <option value="22">22:00</option>
+                                <option value="23">23:00</option>
+                                <option value="0" selected>00:00</option>
+                                <option value="1">01:00</option>
+                                <option value="2">02:00</option>
+                                <option value="3">03:00</option>
+                            </select>
+                        </div>
+                        <div class="time-input-group" style="display: flex; align-items: center; gap: 4px; font-size: 10px; color: #94a3b8;">
+                            <span>To</span>
+                            <select id="sleep-end-hour" class="time-select" style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 2px 4px; border-radius: 4px; outline: none; font-size: 10px;">
+                                <option value="4">04:00</option>
+                                <option value="5">05:00</option>
+                                <option value="6" selected>06:00</option>
+                                <option value="7">07:00</option>
+                                <option value="8">08:00</option>
+                                <option value="9">09:00</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulation Controller -->
+            <div class="sidebar-section simulation-controls">
+                <h3>TEST ALERTS (SIM)</h3>
+                <div class="toggle-row">
+                    <label class="switch-label">Motors Stuck</label>
+                    <label class="switch">
+                        <input type="checkbox" id="sim-alert-motors">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <label class="switch-label">Thermal Throttle</label>
+                    <label class="switch">
+                        <input type="checkbox" id="sim-alert-thermal">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-row">
+                    <label class="switch-label">Low Voltage</label>
+                    <label class="switch">
+                        <input type="checkbox" id="sim-alert-voltage">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button class="btn btn-accent btn-block" id="btn-toggle-sim" style="margin-bottom: 8px;">TOGGLE LIVE / SIM</button>
+                <button class="btn btn-primary btn-block" id="btn-export-csv" style="border-color: rgba(16, 185, 129, 0.3); color: var(--color-green); background: rgba(16, 185, 129, 0.1);">EXPORT SESSION LOG</button>
+            </div>
+            
+            <div class="footer-note">
+                Starlink Windows Stats
+            </div>
+        </aside>
+
+        <!-- Main Dashboard content -->
+        <main class="dashboard-main">
+            <!-- Header -->
+            <header class="dashboard-header">
+                <h2>TELEMETRY DASHBOARD</h2>
+                <div class="uptime-badge">
+                    <span class="label">UPTIME:</span>
+                    <span class="value" id="uptime-value">00:00:00</span>
+                </div>
+            </header>
+
+            <!-- Grid Content -->
+            <div class="dashboard-grid">
+                
+                <!-- Card 1: Download Speed -->
+                <div class="metric-card card-download">
+                    <div class="card-glow"></div>
+                    <div class="metric-title">
+                        <span>DOWNLOAD SPEED</span>
+                        <span class="arrow-icon">↓</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <div class="metric-number" id="dl-speed">0.0</div>
+                        <span class="metric-unit">Mbps</span>
+                    </div>
+                    <div class="metric-footer">
+                        <span>Peak: <strong id="dl-peak">0.0</strong> Mbps</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Upload Speed -->
+                <div class="metric-card card-upload">
+                    <div class="card-glow"></div>
+                    <div class="metric-title">
+                        <span>UPLOAD SPEED</span>
+                        <span class="arrow-icon">↑</span>
+                    </div>
+                    <div class="metric-value-container">
+                        <div class="metric-number" id="ul-speed">0.0</div>
+                        <span class="metric-unit">Mbps</span>
+                    </div>
+                    <div class="metric-footer">
+                        <span>Peak: <strong id="ul-peak">0.0</strong> Mbps</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Ping & SNR -->
+                <div class="metric-card card-latency">
+                    <div class="card-glow"></div>
+                    <div class="metric-title">
+                        <span>LATENCY & SNR</span>
+                        <span class="pulse-icon">⚡</span>
+                    </div>
+                    <div class="double-metric">
+                        <div class="sub-metric">
+                            <span class="sub-label">PING</span>
+                            <span class="sub-val highlight-blue"><span id="ping-value">0.0</span> <small>ms</small></span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-label">SNR</span>
+                            <span class="sub-val highlight-green"><span id="snr-value">0.0</span> <small>dB</small></span>
+                        </div>
+                    </div>
+                    <div class="metric-footer" style="display: flex; flex-direction: column; gap: 4px;">
+                        <div>
+                            <span>Satellites Tracked: <strong id="val-satellites" class="highlight-cyan">-</strong> | Obstruction Percentage: <strong id="obstruction-pct">0.0</strong>%</span>
+                        </div>
+                        <div style="border-top: 1px solid rgba(255, 255, 255, 0.03); padding-top: 4px; margin-top: 2px;">
+                            <span>Total Time Obstructed: <strong id="val-obstructed-time" class="highlight-magenta">0s</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Data Session Usage -->
+                <div class="metric-card card-data">
+                    <div class="card-glow"></div>
+                    <div class="metric-title">
+                        <span>DATA USED (SESSION)</span>
+                        <span class="data-icon">📦</span>
+                    </div>
+                    <div class="double-metric">
+                        <div class="sub-metric">
+                            <span class="sub-label">DOWNLOAD</span>
+                            <span class="sub-val highlight-cyan" id="rx-bytes">0.00 MB</span>
+                        </div>
+                        <div class="sub-metric">
+                            <span class="sub-label">UPLOAD</span>
+                            <span class="sub-val highlight-magenta" id="tx-bytes">0.00 MB</span>
+                        </div>
+                    </div>
+                    <div class="metric-footer" style="display: flex; justify-content: space-between; flex-direction: row; width: 100%;">
+                        <span>Rx Total: <strong id="rx-bytes-total" class="highlight-cyan">0.00 MB</strong></span>
+                        <span>Tx Total: <strong id="tx-bytes-total" class="highlight-magenta">0.00 MB</strong></span>
+                    </div>
+                </div>
+
+                <!-- Chart Block 1: Throughput History -->
+                <div class="grid-card span-2 chart-container">
+                    <div class="card-glow"></div>
+                    <h3>THROUGHPUT REAL-TIME HISTORY</h3>
+                    <div class="canvas-wrapper">
+                        <canvas id="speed-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart Block 2: Latency & Packet Loss History -->
+                <div class="grid-card span-2 chart-container">
+                    <div class="card-glow"></div>
+                    <h3>LATENCY & PACKET LOSS HISTORY</h3>
+                    <div class="canvas-wrapper">
+                        <canvas id="ping-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Obstruction Map (Radar Style) -->
+                <div class="grid-card span-2 obstruction-container">
+                    <div class="card-glow"></div>
+                    <h3>HEMISPHERICAL OBSTRUCTION MAP</h3>
+                    <div class="radar-wrapper">
+                        <canvas id="radar-map"></canvas>
+                        <div class="radar-labels">
+                            <span class="radar-label label-n">N</span>
+                            <span class="radar-label label-e">E</span>
+                            <span class="radar-label label-s">S</span>
+                            <span class="radar-label label-w">W</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Information & Alerts Panel -->
+                <div class="grid-card span-2 details-container">
+                    <div class="card-glow"></div>
+                    <h3>HARDWARE & SYSTEM DETAILS</h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="label">Device ID</span>
+                            <span class="value" id="val-device-id">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Hardware Revision</span>
+                            <span class="value" id="val-hw-rev">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Software Version</span>
+                            <span class="value scrollable-version" id="val-sw-ver">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Dish Alignment Angles</span>
+                            <span class="value" id="val-angles">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">GPS Fix Status</span>
+                            <span class="value" id="val-gps-status">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Active Heating State</span>
+                            <span class="value" id="val-heating-state">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Alerts Log -->
+                    <div class="alerts-log-container">
+                        <h4>SYSTEM ALERTS</h4>
+                        <div id="alerts-list" class="alerts-list">
+                            <div class="alert-item alert-ok">
+                                <span class="alert-icon">✓</span>
+                                <span class="alert-msg">ALL SYSTEMS OPERATIONAL</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Diagnostics Card (Full Width) -->
+                <div class="grid-card span-4 diagnostics-container" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div class="card-glow"></div>
+                    <div class="diagnostics-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 8px;">
+                        <h3 style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">CONNECTION DIAGNOSTIC TROUBLESHOOTER</h3>
+                        <button class="btn btn-primary" id="btn-run-diagnostics" style="padding: 6px 16px;">RUN DIAGNOSTICS</button>
+                    </div>
+                    <div class="diagnostics-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div class="diag-item" id="diag-local" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast);">
+                            <div class="diag-status-icon" id="diag-local-icon" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; font-size: 11px;">○</div>
+                            <div class="diag-details" style="display: flex; flex-direction: column;">
+                                <span class="diag-name" style="font-size: 11px; font-weight: 700;">Local Connection</span>
+                                <span class="diag-desc" id="diag-local-desc" style="font-size: 9px; color: #64748b;">Not Checked</span>
+                            </div>
+                        </div>
+                        <div class="diag-item" id="diag-grpc" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast);">
+                            <div class="diag-status-icon" id="diag-grpc-icon" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; font-size: 11px;">○</div>
+                            <div class="diag-details" style="display: flex; flex-direction: column;">
+                                <span class="diag-name" style="font-size: 11px; font-weight: 700;">gRPC Channel</span>
+                                <span class="diag-desc" id="diag-grpc-desc" style="font-size: 9px; color: #64748b;">Not Checked</span>
+                            </div>
+                        </div>
+                        <div class="diag-item" id="diag-internet" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast);">
+                            <div class="diag-status-icon" id="diag-internet-icon" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; font-size: 11px;">○</div>
+                            <div class="diag-details" style="display: flex; flex-direction: column;">
+                                <span class="diag-name" style="font-size: 11px; font-weight: 700;">Internet Access</span>
+                                <span class="diag-desc" id="diag-internet-desc" style="font-size: 9px; color: #64748b;">Not Checked</span>
+                            </div>
+                        </div>
+                        <div class="diag-item" id="diag-dns" style="background: rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; display: flex; align-items: center; gap: 12px; transition: var(--transition-fast);">
+                            <div class="diag-status-icon" id="diag-dns-icon" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #475569; font-size: 11px;">○</div>
+                            <div class="diag-details" style="display: flex; flex-direction: column;">
+                                <span class="diag-name" style="font-size: 11px; font-weight: 700;">DNS Resolution</span>
+                                <span class="diag-desc" id="diag-dns-desc" style="font-size: 9px; color: #64748b;">Not Checked</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="diagnostics-log" id="diagnostics-log" style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; font-family: var(--font-mono); font-size: 11px; color: #94a3b8; min-height: 48px; max-height: 80px; overflow-y: auto;">
+                        Click "Run Diagnostics" to initiate real-time troubleshooting checks.
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Dialogs -->
+    <div id="reboot-modal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Dish Reboot</h3>
+            <p>Are you sure you want to reboot the Starlink dish? This will temporarily interrupt your internet connection for several minutes.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="btn-cancel-reboot">CANCEL</button>
+                <button class="btn btn-primary" id="btn-confirm-reboot">REBOOT NOW</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="stow-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="stow-modal-title">Confirm Dish Stow</h3>
+            <p id="stow-modal-desc">Stowing the dish will fold the antenna flat for transport. This will interrupt your internet connection. Press Stow to proceed.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="btn-cancel-stow">CANCEL</button>
+                <button class="btn btn-primary" id="btn-confirm-stow">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification-toast">Notification Message</div>
+
+    <script src="app.js"></script>
+</body>
+</html>

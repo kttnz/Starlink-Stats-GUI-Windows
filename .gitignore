@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller / Build
+build/
+dist/
+starlink_stats.spec
+
+# MSIX Packaged binaries (large files)
+*.msix
+
+# Private Developer Certificates (Security)
+*.pfx
+*.cer
+*.pvk
+
+# User/Local Settings
+.vscode/
+.idea/
+*.log

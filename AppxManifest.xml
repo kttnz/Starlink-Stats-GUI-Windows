@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package 
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" 
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" 
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10" 
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity 
+    Name="StarlinkWindowsStats" 
+    Publisher="CN=StarlinkWindowsStatsPublisher" 
+    Version="0.0.11.0" 
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Starlink Windows Stats</DisplayName>
+    <PublisherDisplayName>Starlink Windows Stats Developer</PublisherDisplayName>
+    <Description>Robust and detailed Starlink gRPC telemetry dashboard for Windows.</Description>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.22000.0" />
+  </Dependencies>
+
+  <Capabilities>
+    <!-- Required for Desktop Bridge classic win32 applications -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+  <Applications>
+    <Application 
+      Id="StarlinkWindowsStatsApp" 
+      Executable="starlink_stats.exe" 
+      EntryPoint="Windows.FullTrustApplication">
+      
+      <uap:VisualElements 
+        DisplayName="Starlink Windows Stats" 
+        Square150x150Logo="Assets\Square150x150Logo.png" 
+        Square44x44Logo="Assets\Square44x44Logo.png" 
+        Description="Starlink gRPC Telemetry Dashboard"
+        BackgroundColor="#070913">
+        
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+      
+    </Application>
+  </Applications>
+</Package>
