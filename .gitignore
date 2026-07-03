@@ -9,8 +9,9 @@ build/
 dist/
 starlink_stats.spec
 
-# MSIX Packaged binaries (large files)
+# MSIX and ZIP Packaged binaries (large files)
 *.msix
+*.zip
 
 # Private Developer Certificates (Security)
 *.pfx
