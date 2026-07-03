@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 
 # Constants
 $AppName = "starlink_stats"
-$Version = "0.0.12"
+$Version = "0.0.13"
 $MsixName = "Starlink-Windows-Stats-v.${Version}.msix"
 $PackageRootDir = "package_root"
 $PfxPath = "StarlinkStatsCert.pfx"

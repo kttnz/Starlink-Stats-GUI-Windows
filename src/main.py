@@ -3,6 +3,12 @@ import os
 import time
 import random
 import threading
+
+# Force pywebview to use the EdgeChromium (WebView2) backend.
+# This avoids the WinForms/pythonnet/.NET dependency that causes
+# "Failed to resolve Python.Runtime.Loader.Initialize" errors.
+os.environ["PYWEBVIEW_GUI"] = "edgechromium"
+
 import webview
 import grpc
 
@@ -565,7 +571,7 @@ def main():
     print(f"Loading UI from: {html_path}")
     
     window = webview.create_window(
-        title="Starlink Windows Stats - v0.0.12",
+        title="Starlink Windows Stats - v0.0.13",
         url=html_path,
         js_api=api,
         width=1280,
@@ -574,7 +580,7 @@ def main():
         min_size=(960, 540)
     )
     
-    webview.start(debug=False)
+    webview.start(gui="edgechromium", debug=False)
 
 if __name__ == "__main__":
     main()
