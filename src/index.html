@@ -18,7 +18,7 @@
                 </div>
                 <div>
                     <h1>STARLINK</h1>
-                    <span class="version-badge">v0.0.13</span>
+                    <span class="version-badge">v0.0.14</span>
                 </div>
             </div>
 
@@ -189,12 +189,13 @@
                             <span class="sub-val highlight-green"><span id="snr-value">0.0</span> <small>dB</small></span>
                         </div>
                     </div>
-                    <div class="metric-footer" style="display: flex; flex-direction: column; gap: 4px;">
+                    <div class="metric-footer" style="display: flex; flex-direction: column; gap: 5px;">
                         <div>
-                            <span>Satellites Tracked: <strong id="val-satellites" class="highlight-cyan">-</strong> | Obstruction Percentage: <strong id="obstruction-pct">0.0</strong>%</span>
+                            <span>Satellites Tracked: <strong id="val-satellites" class="highlight-cyan">-</strong></span>
                         </div>
-                        <div style="border-top: 1px solid rgba(255, 255, 255, 0.03); padding-top: 4px; margin-top: 2px;">
-                            <span>Total Time Obstructed: <strong id="val-obstructed-time" class="highlight-magenta">0s</strong></span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 4px; margin-top: 2px;">
+                            <span>Obstruction: <strong id="obstruction-pct">0.0</strong>%</span>
+                            <span>Time Obstructed: <strong id="val-obstructed-time" class="highlight-magenta">0s</strong></span>
                         </div>
                     </div>
                 </div>
@@ -208,12 +209,38 @@
                     </div>
                     <div class="double-metric">
                         <div class="sub-metric">
-                            <span class="sub-label">DOWNLOAD</span>
+                            <span class="sub-label">SESSION Rx</span>
                             <span class="sub-val highlight-cyan" id="rx-bytes">0.00 MB</span>
                         </div>
                         <div class="sub-metric">
-                            <span class="sub-label">UPLOAD</span>
+                            <span class="sub-label">SESSION Tx</span>
                             <span class="sub-val highlight-magenta" id="tx-bytes">0.00 MB</span>
+                        </div>
+                    </div>
+                    <!-- Rolling Traffic Averages -->
+                    <div class="traffic-averages">
+                        <div class="traffic-avg-header">TRAFFIC AVERAGES</div>
+                        <div class="traffic-avg-grid">
+                            <div class="traffic-avg-row">
+                                <span class="avg-window">1m</span>
+                                <span class="avg-label">Rx</span><span class="avg-val highlight-cyan" id="rx-avg-1m">0.00 MB</span>
+                                <span class="avg-label">Tx</span><span class="avg-val highlight-magenta" id="tx-avg-1m">0.00 MB</span>
+                            </div>
+                            <div class="traffic-avg-row">
+                                <span class="avg-window">5m</span>
+                                <span class="avg-label">Rx</span><span class="avg-val highlight-cyan" id="rx-avg-5m">0.00 MB</span>
+                                <span class="avg-label">Tx</span><span class="avg-val highlight-magenta" id="tx-avg-5m">0.00 MB</span>
+                            </div>
+                            <div class="traffic-avg-row">
+                                <span class="avg-window">15m</span>
+                                <span class="avg-label">Rx</span><span class="avg-val highlight-cyan" id="rx-avg-15m">0.00 MB</span>
+                                <span class="avg-label">Tx</span><span class="avg-val highlight-magenta" id="tx-avg-15m">0.00 MB</span>
+                            </div>
+                            <div class="traffic-avg-row">
+                                <span class="avg-window">1h</span>
+                                <span class="avg-label">Rx</span><span class="avg-val highlight-cyan" id="rx-avg-1h">0.00 MB</span>
+                                <span class="avg-label">Tx</span><span class="avg-val highlight-magenta" id="tx-avg-1h">0.00 MB</span>
+                            </div>
                         </div>
                     </div>
                     <div class="metric-footer" style="display: flex; justify-content: space-between; flex-direction: row; width: 100%;">
@@ -225,7 +252,15 @@
                 <!-- Chart Block 1: Throughput History -->
                 <div class="grid-card span-2 chart-container">
                     <div class="card-glow"></div>
-                    <h3>THROUGHPUT REAL-TIME HISTORY</h3>
+                    <div class="chart-header">
+                        <h3>THROUGHPUT REAL-TIME HISTORY</h3>
+                        <div class="interval-btn-group">
+                            <button class="interval-btn active" data-seconds="60">1m</button>
+                            <button class="interval-btn" data-seconds="300">5m</button>
+                            <button class="interval-btn" data-seconds="900">15m</button>
+                            <button class="interval-btn" data-seconds="3600">1h</button>
+                        </div>
+                    </div>
                     <div class="canvas-wrapper">
                         <canvas id="speed-chart"></canvas>
                     </div>
@@ -234,7 +269,15 @@
                 <!-- Chart Block 2: Latency & Packet Loss History -->
                 <div class="grid-card span-2 chart-container">
                     <div class="card-glow"></div>
-                    <h3>LATENCY & PACKET LOSS HISTORY</h3>
+                    <div class="chart-header">
+                        <h3>LATENCY & PACKET LOSS HISTORY</h3>
+                        <div class="interval-btn-group">
+                            <button class="interval-btn active" data-seconds="60">1m</button>
+                            <button class="interval-btn" data-seconds="300">5m</button>
+                            <button class="interval-btn" data-seconds="900">15m</button>
+                            <button class="interval-btn" data-seconds="3600">1h</button>
+                        </div>
+                    </div>
                     <div class="canvas-wrapper">
                         <canvas id="ping-chart"></canvas>
                     </div>

@@ -551,6 +551,59 @@ input:checked + .slider:before {
     padding-top: 6px;
 }
 
+/* Traffic Averages Section (Card 4) */
+.traffic-averages {
+    margin: 8px 0 6px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+}
+
+.traffic-avg-header {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: #475569;
+    margin-bottom: 6px;
+}
+
+.traffic-avg-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.traffic-avg-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+}
+
+.avg-window {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: #475569;
+    width: 22px;
+    flex-shrink: 0;
+}
+
+.avg-label {
+    font-size: 9px;
+    color: #475569;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.avg-val {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    flex: 1;
+}
+
 /* Grid Cards (Larger sections) */
 .grid-card {
     position: relative;
@@ -574,9 +627,52 @@ input:checked + .slider:before {
     font-weight: 700;
     letter-spacing: 1px;
     color: #fff;
-    margin-bottom: 16px;
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Chart card header with title + interval buttons */
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+/* Interval selector pill buttons */
+.interval-btn-group {
+    display: flex;
+    gap: 4px;
+}
+
+.interval-btn {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #64748b;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    letter-spacing: 0.5px;
+}
+
+.interval-btn:hover {
+    background: rgba(0, 242, 254, 0.08);
+    border-color: rgba(0, 242, 254, 0.25);
+    color: var(--color-cyan);
+}
+
+.interval-btn.active {
+    background: rgba(0, 242, 254, 0.12);
+    border-color: rgba(0, 242, 254, 0.4);
+    color: var(--color-cyan);
+    box-shadow: 0 0 8px rgba(0, 242, 254, 0.15);
 }
 
 /* Speed Chart Block */
@@ -587,7 +683,7 @@ input:checked + .slider:before {
 .canvas-wrapper {
     position: relative;
     width: 100%;
-    height: calc(100% - 30px);
+    height: calc(100% - 50px);
 }
 
 #speed-chart, #ping-chart {

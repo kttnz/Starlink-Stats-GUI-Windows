@@ -3,10 +3,20 @@ let downloadHistory = [];
 let uploadHistory = [];
 let pingHistory = [];
 let pingDropHistory = [];
-const maxHistoryLength = 60; // 60 seconds of history
+const maxHistoryLength = 3600; // 1 hour of history (1 sample per second)
 
 let dlPeak = 0;
 let ulPeak = 0;
+
+// Chart interval view window (seconds shown on chart)
+let chartViewWindow = 60; // Default: last 60 seconds
+
+// Data session tracking
+let dataSampleBuffer = [];  // { time, rxBytes, txBytes } per second
+let sessionRxTotal = 0;     // cumulative Rx bytes this session
+let sessionTxTotal = 0;     // cumulative Tx bytes this session
+let lastRxBytes = null;     // previous poll's raw rx total
+let lastTxBytes = null;     // previous poll's raw tx total
 
 // Canvas contexts
 let speedChartCanvas = null;
@@ -235,6 +245,16 @@ function setupEventListeners() {
     document.getElementById("sleep-start-hour").addEventListener("change", updateSleepSchedule);
     document.getElementById("sleep-end-hour").addEventListener("change", updateSleepSchedule);
 
+    // Chart interval selector buttons
+    const intervalBtns = document.querySelectorAll(".interval-btn");
+    intervalBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            intervalBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            chartViewWindow = parseInt(btn.dataset.seconds);
+        });
+    });
+
     // Diagnostics Troubleshooter
     const btnRunDiag = document.getElementById("btn-run-diagnostics");
     btnRunDiag.addEventListener("click", () => {
@@ -454,14 +474,60 @@ function updateDashboard(stats) {
     }
     document.getElementById("val-obstructed-time").textContent = formatObstructedTime(totalObstructedSeconds);
 
-    // Data Used
-    const rxFormatted = formatBytes(stats.rx_bytes_total);
-    const txFormatted = formatBytes(stats.tx_bytes_total);
+    // Data Used — session tracking
+    const rawRx = stats.rx_bytes_total;
+    const rawTx = stats.tx_bytes_total;
 
-    document.getElementById("rx-bytes").textContent = rxFormatted;
-    document.getElementById("tx-bytes").textContent = txFormatted;
-    document.getElementById("rx-bytes-total").textContent = rxFormatted;
-    document.getElementById("tx-bytes-total").textContent = txFormatted;
+    // Calculate delta bytes since last poll and accumulate session totals
+    if (lastRxBytes !== null && rawRx >= lastRxBytes) {
+        sessionRxTotal += (rawRx - lastRxBytes);
+    }
+    if (lastTxBytes !== null && rawTx >= lastTxBytes) {
+        sessionTxTotal += (rawTx - lastTxBytes);
+    }
+    lastRxBytes = rawRx;
+    lastTxBytes = rawTx;
+
+    // Push current sample to the data buffer (keep up to 3600 samples = 1 hour)
+    const now = Date.now();
+    dataSampleBuffer.push({ time: now, rxBytes: rawRx, txBytes: rawTx });
+    if (dataSampleBuffer.length > maxHistoryLength) dataSampleBuffer.shift();
+
+    // Helper: compute total bytes transferred over the last windowSecs seconds
+    function computeTrafficAverage(windowSecs) {
+        const cutoff = now - windowSecs * 1000;
+        const relevant = dataSampleBuffer.filter(s => s.time >= cutoff);
+        if (relevant.length < 2) return { rx: 0, tx: 0 };
+        const oldest = relevant[0];
+        const newest = relevant[relevant.length - 1];
+        return {
+            rx: Math.max(0, newest.rxBytes - oldest.rxBytes),
+            tx: Math.max(0, newest.txBytes - oldest.txBytes)
+        };
+    }
+
+    // Live current speed display (top of card)
+    document.getElementById("rx-bytes").textContent = formatBytes(sessionRxTotal);
+    document.getElementById("tx-bytes").textContent = formatBytes(sessionTxTotal);
+
+    // Rolling traffic averages
+    const avg1m  = computeTrafficAverage(60);
+    const avg5m  = computeTrafficAverage(300);
+    const avg15m = computeTrafficAverage(900);
+    const avg1h  = computeTrafficAverage(3600);
+
+    document.getElementById("rx-avg-1m").textContent  = formatBytes(avg1m.rx);
+    document.getElementById("tx-avg-1m").textContent  = formatBytes(avg1m.tx);
+    document.getElementById("rx-avg-5m").textContent  = formatBytes(avg5m.rx);
+    document.getElementById("tx-avg-5m").textContent  = formatBytes(avg5m.tx);
+    document.getElementById("rx-avg-15m").textContent = formatBytes(avg15m.rx);
+    document.getElementById("tx-avg-15m").textContent = formatBytes(avg15m.tx);
+    document.getElementById("rx-avg-1h").textContent  = formatBytes(avg1h.rx);
+    document.getElementById("tx-avg-1h").textContent  = formatBytes(avg1h.tx);
+
+    // Session cumulative totals (footer)
+    document.getElementById("rx-bytes-total").textContent = formatBytes(sessionRxTotal);
+    document.getElementById("tx-bytes-total").textContent = formatBytes(sessionTxTotal);
 
     // Uptime
     document.getElementById("uptime-value").textContent = formatUptime(stats.uptime_seconds);
@@ -630,7 +696,6 @@ function drawSpeedChart() {
     // Draw background grid lines
     ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
     ctx.lineWidth = 1;
-    
     const gridLines = 5;
     for (let i = 0; i <= gridLines; i++) {
         const y = marginT + (graphH / gridLines) * i;
@@ -640,15 +705,15 @@ function drawSpeedChart() {
         ctx.stroke();
     }
     
-    // Draw Speed Lines
-    if (downloadHistory.length < 2) return;
+    // Slice history to the current view window
+    const viewDl = downloadHistory.slice(-chartViewWindow);
+    const viewUl = uploadHistory.slice(-chartViewWindow);
+    if (viewDl.length < 2) return;
     
-    // Calculate max scale based on peak history
-    let maxVal = 100; // Minimum scale is 100 Mbps
-    for (let val of downloadHistory) {
-        if (val > maxVal) maxVal = val;
-    }
-    // Round max scale to next 50
+    // Calculate max scale based on sliced history
+    let maxVal = 100;
+    for (let val of viewDl) { if (val > maxVal) maxVal = val; }
+    for (let val of viewUl) { if (val > maxVal) maxVal = val; }
     maxVal = Math.ceil(maxVal / 50) * 50;
     
     // Draw Y axis labels
@@ -662,42 +727,34 @@ function drawSpeedChart() {
         ctx.fillText(Math.round(val), marginL - 8, y);
     }
     
-    // Draw X axis time label
+    // Draw X axis time labels
+    const xLabel = chartViewWindow >= 3600 ? "1h ago" :
+                   chartViewWindow >= 900  ? "15m ago" :
+                   chartViewWindow >= 300  ? "5m ago"  : "60s ago";
     ctx.textAlign = "center";
-    ctx.fillText("60s", marginL, h - marginB + 14);
+    ctx.fillText(xLabel, marginL, h - marginB + 14);
     ctx.fillText("Now", w - marginR, h - marginB + 14);
 
-    // Function to draw a path for a history array
+    // Function to draw a path for a sliced history array
     const drawLinePath = (history, strokeColor, glowColor, fillColor) => {
         ctx.beginPath();
-        
-        const stepX = graphW / (maxHistoryLength - 1);
-        const startIdx = maxHistoryLength - history.length;
-        
-        ctx.moveTo(marginL + startIdx * stepX, marginT + graphH - (history[0] / maxVal) * graphH);
-        
+        const stepX = graphW / Math.max(history.length - 1, 1);
+        ctx.moveTo(marginL, marginT + graphH - (history[0] / maxVal) * graphH);
         for (let i = 1; i < history.length; i++) {
-            const x = marginL + (startIdx + i) * stepX;
+            const x = marginL + i * stepX;
             const y = marginT + graphH - (history[i] / maxVal) * graphH;
             ctx.lineTo(x, y);
         }
-        
-        // Save path for stroke
         ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 2.5;
         ctx.shadowColor = glowColor;
         ctx.shadowBlur = 10;
         ctx.stroke();
-        
-        // Remove shadow for fill
         ctx.shadowBlur = 0;
-        
-        // Close path to draw gradient fill
-        const lastX = marginL + (startIdx + history.length - 1) * stepX;
+        const lastX = marginL + (history.length - 1) * stepX;
         ctx.lineTo(lastX, marginT + graphH);
-        ctx.lineTo(marginL + startIdx * stepX, marginT + graphH);
+        ctx.lineTo(marginL, marginT + graphH);
         ctx.closePath();
-        
         const fillGrad = ctx.createLinearGradient(0, marginT, 0, marginT + graphH);
         fillGrad.addColorStop(0, fillColor);
         fillGrad.addColorStop(1, "rgba(7, 9, 19, 0)");
@@ -705,11 +762,8 @@ function drawSpeedChart() {
         ctx.fill();
     };
 
-    // Draw Upload History (Magenta)
-    drawLinePath(uploadHistory, "#ff007f", "rgba(255, 0, 127, 0.4)", "rgba(255, 0, 127, 0.08)");
-
-    // Draw Download History (Cyan)
-    drawLinePath(downloadHistory, "#00f2fe", "rgba(0, 242, 254, 0.4)", "rgba(0, 242, 254, 0.12)");
+    drawLinePath(viewUl, "#ff007f", "rgba(255, 0, 127, 0.4)", "rgba(255, 0, 127, 0.08)");
+    drawLinePath(viewDl, "#00f2fe", "rgba(0, 242, 254, 0.4)", "rgba(0, 242, 254, 0.12)");
 }
 
 // Draw the Ping and Packet Loss Chart on Canvas
@@ -720,10 +774,8 @@ function drawPingChart() {
     const w = pingChartCanvas.width;
     const h = pingChartCanvas.height;
     
-    // Clear canvas
     ctx.clearRect(0, 0, w, h);
     
-    // Define margins
     const marginL = 40;
     const marginR = 10;
     const marginT = 15;
@@ -731,10 +783,8 @@ function drawPingChart() {
     const graphW = w - marginL - marginR;
     const graphH = h - marginT - marginB;
     
-    // Draw background grid lines
     ctx.strokeStyle = "rgba(255, 255, 255, 0.04)";
     ctx.lineWidth = 1;
-    
     const gridLines = 5;
     for (let i = 0; i <= gridLines; i++) {
         const y = marginT + (graphH / gridLines) * i;
@@ -744,17 +794,15 @@ function drawPingChart() {
         ctx.stroke();
     }
     
-    if (pingHistory.length < 2) return;
+    // Slice history to current view window
+    const viewPing = pingHistory.slice(-chartViewWindow);
+    const viewDrop = pingDropHistory.slice(-chartViewWindow);
+    if (viewPing.length < 2) return;
     
-    // Calculate max scale based on peak history
-    let maxVal = 60; // Minimum scale is 60 ms
-    for (let val of pingHistory) {
-        if (val > maxVal) maxVal = val;
-    }
-    // Round max scale to next 20
+    let maxVal = 60;
+    for (let val of viewPing) { if (val > maxVal) maxVal = val; }
     maxVal = Math.ceil(maxVal / 20) * 20;
     
-    // Draw Y axis labels (Ping ms)
     ctx.fillStyle = "#64748b";
     ctx.font = "10px 'Share Tech Mono'";
     ctx.textAlign = "right";
@@ -765,54 +813,48 @@ function drawPingChart() {
         ctx.fillText(Math.round(val), marginL - 8, y);
     }
     
-    // Draw X axis time label
+    const xLabel = chartViewWindow >= 3600 ? "1h ago" :
+                   chartViewWindow >= 900  ? "15m ago" :
+                   chartViewWindow >= 300  ? "5m ago"  : "60s ago";
     ctx.textAlign = "center";
-    ctx.fillText("60s", marginL, h - marginB + 14);
+    ctx.fillText(xLabel, marginL, h - marginB + 14);
     ctx.fillText("Now", w - marginR, h - marginB + 14);
 
-    const stepX = graphW / (maxHistoryLength - 1);
-    const startIdx = maxHistoryLength - pingHistory.length;
+    const stepX = graphW / Math.max(viewPing.length - 1, 1);
 
-    // First: Draw packet drops (red vertical bars) underneath
+    // Draw packet drops
     ctx.shadowBlur = 0;
-    for (let i = 0; i < pingDropHistory.length; i++) {
-        if (pingDropHistory[i] === 1) {
-            const x = marginL + (startIdx + i) * stepX;
+    for (let i = 0; i < viewDrop.length; i++) {
+        if (viewDrop[i] === 1) {
+            const x = marginL + i * stepX;
             ctx.beginPath();
             ctx.moveTo(x, marginT + graphH);
-            ctx.lineTo(x, marginT + graphH * 0.6); // draw up 40% high
+            ctx.lineTo(x, marginT + graphH * 0.6);
             ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
             ctx.lineWidth = 3;
             ctx.stroke();
         }
     }
 
-    // Second: Draw Ping line path
+    // Draw Ping line
     ctx.beginPath();
-    ctx.moveTo(marginL + startIdx * stepX, marginT + graphH - (pingHistory[0] / maxVal) * graphH);
-    
-    for (let i = 1; i < pingHistory.length; i++) {
-        const x = marginL + (startIdx + i) * stepX;
-        const y = marginT + graphH - (pingHistory[i] / maxVal) * graphH;
+    ctx.moveTo(marginL, marginT + graphH - (viewPing[0] / maxVal) * graphH);
+    for (let i = 1; i < viewPing.length; i++) {
+        const x = marginL + i * stepX;
+        const y = marginT + graphH - (viewPing[i] / maxVal) * graphH;
         ctx.lineTo(x, y);
     }
-    
-    // Save path for stroke
     ctx.strokeStyle = "#3b82f6";
     ctx.lineWidth = 2;
     ctx.shadowColor = "rgba(59, 130, 246, 0.5)";
     ctx.shadowBlur = 8;
     ctx.stroke();
-    
-    // Remove shadow for fill
     ctx.shadowBlur = 0;
     
-    // Close path to draw gradient fill
-    const lastX = marginL + (startIdx + pingHistory.length - 1) * stepX;
+    const lastX = marginL + (viewPing.length - 1) * stepX;
     ctx.lineTo(lastX, marginT + graphH);
-    ctx.lineTo(marginL + startIdx * stepX, marginT + graphH);
+    ctx.lineTo(marginL, marginT + graphH);
     ctx.closePath();
-    
     const fillGrad = ctx.createLinearGradient(0, marginT, 0, marginT + graphH);
     fillGrad.addColorStop(0, "rgba(59, 130, 246, 0.1)");
     fillGrad.addColorStop(1, "rgba(7, 9, 19, 0)");
