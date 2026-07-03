@@ -192,6 +192,9 @@ class StarlinkAPI:
                 "uplink_throughput_bps": self.sim_ul * 1000000,
                 "ping_ms": self.sim_ping,
                 "snr": self.sim_snr,
+                "pop_ping_drop_rate": random.uniform(0.0, 0.015),
+                "dl_capacity_bps": self.sim_dl * 1.28 * 1000000,
+                "ul_capacity_bps": self.sim_ul * 1.25 * 1000000,
                 "rx_bytes_total": self.session_rx_bytes,
                 "tx_bytes_total": self.session_tx_bytes,
                 "uptime_seconds": int(now) % 86400 + 3600, # Fake uptime
@@ -267,18 +270,32 @@ class StarlinkAPI:
                     except Exception as he:
                         print(f"Failed to read history: {he}")
                 
-                # Latency
+                # Latency + drop rate + capacity from history
                 ping = 0.0
+                pop_drop_rate = 0.0
+                dl_capacity_bps = dl_bps
+                ul_capacity_bps = ul_bps
                 try:
                     hist_req = self.request_class(get_history={})
                     hist_res = self.stub.Handle(hist_req)
                     history = getattr(hist_res, "get_history", None)
                     if history:
-                        latency_list = getattr(history, "pop_ping_latency_ms", [])
+                        latency_list = list(getattr(history, "pop_ping_latency_ms", []))
                         if latency_list:
                             ping = latency_list[-1]
-                except:
-                    pass
+                        drop_list = list(getattr(history, "pop_ping_drop_rate", []))
+                        if drop_list:
+                            pop_drop_rate = drop_list[-1]
+                        dl_hist = list(getattr(history, "downlink_throughput_bps", []))
+                        ul_hist = list(getattr(history, "uplink_throughput_bps", []))
+                        if dl_hist:
+                            dl_bps = dl_hist[-1]
+                            dl_capacity_bps = max(dl_hist[-60:]) if len(dl_hist) >= 60 else max(dl_hist)
+                        if ul_hist:
+                            ul_bps = ul_hist[-1]
+                            ul_capacity_bps = max(ul_hist[-60:]) if len(ul_hist) >= 60 else max(ul_hist)
+                except Exception as he:
+                    print(f"Failed to read history: {he}")
                 
                 # Fallback to realistic value if still 0
                 if ping == 0.0:
@@ -365,6 +382,9 @@ class StarlinkAPI:
                     "uplink_throughput_bps": ul_bps,
                     "ping_ms": ping,
                     "snr": getattr(dish_status, "snr", 9.0),
+                    "pop_ping_drop_rate": pop_drop_rate,
+                    "dl_capacity_bps": dl_capacity_bps,
+                    "ul_capacity_bps": ul_capacity_bps,
                     "rx_bytes_total": self.session_rx_bytes,
                     "tx_bytes_total": self.session_tx_bytes,
                     "uptime_seconds": uptime,
@@ -571,7 +591,7 @@ def main():
     print(f"Loading UI from: {html_path}")
     
     window = webview.create_window(
-        title="Starlink Windows Stats - v0.0.14",
+        title="Starlink Windows Stats - v0.0.15",
         url=html_path,
         js_api=api,
         width=1280,

@@ -7,6 +7,8 @@ const maxHistoryLength = 3600; // 1 hour of history (1 sample per second)
 
 let dlPeak = 0;
 let ulPeak = 0;
+let dlMin = Infinity;
+let ulMin = Infinity;
 
 // Chart interval view window (seconds shown on chart)
 let chartViewWindow = 60; // Default: last 60 seconds
@@ -245,13 +247,20 @@ function setupEventListeners() {
     document.getElementById("sleep-start-hour").addEventListener("change", updateSleepSchedule);
     document.getElementById("sleep-end-hour").addEventListener("change", updateSleepSchedule);
 
-    // Chart interval selector buttons
+    // Chart interval selector buttons — sync both chart groups by data-seconds value
     const intervalBtns = document.querySelectorAll(".interval-btn");
     intervalBtns.forEach(btn => {
         btn.addEventListener("click", () => {
-            intervalBtns.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            chartViewWindow = parseInt(btn.dataset.seconds);
+            const selectedSeconds = btn.dataset.seconds;
+            chartViewWindow = parseInt(selectedSeconds);
+            // Highlight ALL buttons matching this seconds value (both chart groups)
+            intervalBtns.forEach(b => {
+                if (b.dataset.seconds === selectedSeconds) {
+                    b.classList.add("active");
+                } else {
+                    b.classList.remove("active");
+                }
+            });
         });
     });
 
@@ -430,7 +439,7 @@ function updateDashboard(stats) {
     // Target IP display (in case loaded/changed)
     document.getElementById("ip-input").value = stats.ip;
 
-    // Speeds & Peaks
+    // Speeds & Peaks & Mins
     const dlMbps = parseFloat((stats.downlink_throughput_bps / 1000000).toFixed(1));
     const ulMbps = parseFloat((stats.uplink_throughput_bps / 1000000).toFixed(1));
     
@@ -445,17 +454,68 @@ function updateDashboard(stats) {
         ulPeak = ulMbps;
         document.getElementById("ul-peak").textContent = ulPeak.toFixed(1);
     }
+    if (dlMbps > 0 && dlMbps < dlMin) {
+        dlMin = dlMbps;
+    }
+    if (ulMbps > 0 && ulMbps < ulMin) {
+        ulMin = ulMbps;
+    }
 
     // Speed history list updating
     downloadHistory.push(dlMbps);
     uploadHistory.push(ulMbps);
     if (downloadHistory.length > maxHistoryLength) downloadHistory.shift();
-    if (downloadHistory.length > maxHistoryLength) uploadHistory.shift();
+    if (uploadHistory.length > maxHistoryLength) uploadHistory.shift();
+
+    // Compute rolling average and jitter (std deviation) over the current view window
+    function rollingStats(history) {
+        const view = history.slice(-chartViewWindow).filter(v => v > 0);
+        if (view.length === 0) return { avg: 0, jitter: 0 };
+        const avg = view.reduce((a, b) => a + b, 0) / view.length;
+        const variance = view.reduce((s, v) => s + (v - avg) ** 2, 0) / view.length;
+        return { avg: parseFloat(avg.toFixed(1)), jitter: parseFloat(Math.sqrt(variance).toFixed(1)) };
+    }
+
+    const dlStats = rollingStats(downloadHistory);
+    const ulStats = rollingStats(uploadHistory);
+
+    document.getElementById("dl-avg").textContent = dlStats.avg.toFixed(1);
+    document.getElementById("ul-avg").textContent = ulStats.avg.toFixed(1);
+    document.getElementById("dl-min").textContent = dlMin === Infinity ? "0.0" : dlMin.toFixed(1);
+    document.getElementById("ul-min").textContent = ulMin === Infinity ? "0.0" : ulMin.toFixed(1);
+    document.getElementById("dl-jitter").textContent = `\u00b1${dlStats.jitter.toFixed(1)}`;
+    document.getElementById("ul-jitter").textContent = `\u00b1${ulStats.jitter.toFixed(1)}`;
+
+    // Estimated link capacity
+    const dlCapMbps = parseFloat((stats.dl_capacity_bps / 1000000).toFixed(0));
+    const ulCapMbps = parseFloat((stats.ul_capacity_bps / 1000000).toFixed(0));
+    document.getElementById("dl-capacity").textContent = `~${dlCapMbps}`;
+    document.getElementById("ul-capacity").textContent = `~${ulCapMbps}`;
 
     // Ping & Latency History updating
     const currentPing = stats.ping_ms;
     pingHistory.push(currentPing);
     if (pingHistory.length > maxHistoryLength) pingHistory.shift();
+
+    // Compute ping min, max, jitter over view window
+    const pingView = pingHistory.slice(-chartViewWindow).filter(v => v > 0);
+    if (pingView.length > 0) {
+        const pingAvg = pingView.reduce((a, b) => a + b, 0) / pingView.length;
+        const pingVariance = pingView.reduce((s, v) => s + (v - pingAvg) ** 2, 0) / pingView.length;
+        const pingJitter = Math.sqrt(pingVariance);
+        document.getElementById("ping-jitter").textContent = `\u00b1${pingJitter.toFixed(0)} ms`;
+        document.getElementById("ping-min").textContent = `${Math.min(...pingView).toFixed(0)} ms`;
+        document.getElementById("ping-max").textContent = `${Math.max(...pingView).toFixed(0)} ms`;
+    }
+
+    // Packet loss from gRPC
+    const dropRate = stats.pop_ping_drop_rate || 0;
+    const dropPct = (dropRate * 100).toFixed(2);
+    const pktLossEl = document.getElementById("pkt-loss-pct");
+    pktLossEl.textContent = `${dropPct}%`;
+    pktLossEl.className = dropRate > 0.05 ? "latency-stat-val highlight-red" :
+                          dropRate > 0.01 ? "latency-stat-val highlight-yellow" :
+                          "latency-stat-val highlight-green";
 
     // Calculate a simulated packet drop/loss rate based on obstructions
     const dropChance = 0.01 + (stats.obstruction_fraction * 0.5);
@@ -467,6 +527,20 @@ function updateDashboard(stats) {
     document.getElementById("ping-value").textContent = stats.ping_ms.toFixed(0);
     document.getElementById("snr-value").textContent = stats.snr.toFixed(1);
     document.getElementById("obstruction-pct").textContent = (stats.obstruction_fraction * 100).toFixed(1);
+
+    // SNR Quality bar — map SNR 0–10 dB to 0–100%
+    const snrPct = Math.min(100, Math.max(0, (stats.snr / 10) * 100));
+    document.getElementById("snr-bar-fill").style.width = `${snrPct.toFixed(0)}%`;
+    document.getElementById("snr-quality-pct").textContent = `${snrPct.toFixed(0)}%`;
+    // Color the bar based on quality level
+    const snrFill = document.getElementById("snr-bar-fill");
+    if (snrPct >= 80) {
+        snrFill.style.background = "linear-gradient(90deg, #10b981, #00f2fe)";
+    } else if (snrPct >= 50) {
+        snrFill.style.background = "linear-gradient(90deg, #f59e0b, #10b981)";
+    } else {
+        snrFill.style.background = "linear-gradient(90deg, #ef4444, #f59e0b)";
+    }
 
     // Track total obstruction duration (runs once per second when polled)
     if (stats.obstruction_fraction > 0.01) {

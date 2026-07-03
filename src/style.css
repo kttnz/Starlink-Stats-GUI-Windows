@@ -441,6 +441,7 @@ input:checked + .slider:before {
     flex-direction: column;
     justify-content: space-between;
     min-height: 130px;
+    align-self: start;
     backdrop-filter: blur(12px);
     transition: var(--transition-normal);
 }
@@ -550,6 +551,122 @@ input:checked + .slider:before {
     border-top: 1px solid rgba(255, 255, 255, 0.03);
     padding-top: 6px;
 }
+
+/* Speed card 3-column stat row */
+.speed-stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 8px 0 6px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+}
+
+.speed-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.speed-stat-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #475569;
+}
+
+.speed-stat-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.speed-stat-unit {
+    font-size: 8px;
+    color: #475569;
+}
+
+/* Latency card 4-column stat row */
+.latency-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin: 8px 0 6px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+}
+
+.latency-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.latency-stat-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #475569;
+}
+
+.latency-stat-val {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+/* SNR Quality Bar */
+.snr-bar-container {
+    margin: 6px 0 4px;
+}
+
+.snr-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.snr-bar-title {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #475569;
+}
+
+.snr-bar-pct {
+    font-size: 9px;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: #64748b;
+}
+
+.snr-bar {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.snr-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #10b981, #00f2fe);
+    transition: width 0.6s ease, background 0.6s ease;
+    box-shadow: 0 0 6px rgba(0, 242, 254, 0.25);
+}
+
+/* Highlight color utilities */
+.highlight-red { color: var(--color-red) !important; }
+.highlight-yellow { color: var(--color-yellow) !important; }
 
 /* Traffic Averages Section (Card 4) */
 .traffic-averages {

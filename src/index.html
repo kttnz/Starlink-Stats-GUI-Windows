@@ -18,7 +18,7 @@
                 </div>
                 <div>
                     <h1>STARLINK</h1>
-                    <span class="version-badge">v0.0.14</span>
+                    <span class="version-badge">v0.0.15</span>
                 </div>
             </div>
 
@@ -151,8 +151,26 @@
                         <div class="metric-number" id="dl-speed">0.0</div>
                         <span class="metric-unit">Mbps</span>
                     </div>
-                    <div class="metric-footer">
-                        <span>Peak: <strong id="dl-peak">0.0</strong> Mbps</span>
+                    <div class="speed-stat-row">
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">PEAK</span>
+                            <span class="speed-stat-val highlight-cyan" id="dl-peak">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">AVG</span>
+                            <span class="speed-stat-val" id="dl-avg">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">MIN</span>
+                            <span class="speed-stat-val" id="dl-min">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                    </div>
+                    <div class="metric-footer" style="display:flex; justify-content:space-between;">
+                        <span>Jitter: <strong id="dl-jitter" class="highlight-cyan">±0.0</strong> Mbps</span>
+                        <span>Est. Cap: <strong id="dl-capacity">~0</strong> Mbps</span>
                     </div>
                 </div>
 
@@ -167,8 +185,26 @@
                         <div class="metric-number" id="ul-speed">0.0</div>
                         <span class="metric-unit">Mbps</span>
                     </div>
-                    <div class="metric-footer">
-                        <span>Peak: <strong id="ul-peak">0.0</strong> Mbps</span>
+                    <div class="speed-stat-row">
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">PEAK</span>
+                            <span class="speed-stat-val highlight-magenta" id="ul-peak">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">AVG</span>
+                            <span class="speed-stat-val" id="ul-avg">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                        <div class="speed-stat-item">
+                            <span class="speed-stat-label">MIN</span>
+                            <span class="speed-stat-val" id="ul-min">0.0</span>
+                            <span class="speed-stat-unit">Mbps</span>
+                        </div>
+                    </div>
+                    <div class="metric-footer" style="display:flex; justify-content:space-between;">
+                        <span>Jitter: <strong id="ul-jitter" class="highlight-magenta">±0.0</strong> Mbps</span>
+                        <span>Est. Cap: <strong id="ul-capacity">~0</strong> Mbps</span>
                     </div>
                 </div>
 
@@ -176,7 +212,7 @@
                 <div class="metric-card card-latency">
                     <div class="card-glow"></div>
                     <div class="metric-title">
-                        <span>LATENCY & SNR</span>
+                        <span>LATENCY &amp; SNR</span>
                         <span class="pulse-icon">⚡</span>
                     </div>
                     <div class="double-metric">
@@ -187,6 +223,35 @@
                         <div class="sub-metric">
                             <span class="sub-label">SNR</span>
                             <span class="sub-val highlight-green"><span id="snr-value">0.0</span> <small>dB</small></span>
+                        </div>
+                    </div>
+                    <!-- SNR Quality Bar -->
+                    <div class="snr-bar-container">
+                        <div class="snr-bar-labels">
+                            <span class="snr-bar-title">SIGNAL QUALITY</span>
+                            <span class="snr-bar-pct" id="snr-quality-pct">0%</span>
+                        </div>
+                        <div class="snr-bar">
+                            <div class="snr-bar-fill" id="snr-bar-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <!-- Latency sub-stats row -->
+                    <div class="latency-stat-row">
+                        <div class="latency-stat-item">
+                            <span class="latency-stat-label">JITTER</span>
+                            <span class="latency-stat-val highlight-blue" id="ping-jitter">±0 ms</span>
+                        </div>
+                        <div class="latency-stat-item">
+                            <span class="latency-stat-label">PKT LOSS</span>
+                            <span class="latency-stat-val" id="pkt-loss-pct">0.0%</span>
+                        </div>
+                        <div class="latency-stat-item">
+                            <span class="latency-stat-label">MIN</span>
+                            <span class="latency-stat-val" id="ping-min">0 ms</span>
+                        </div>
+                        <div class="latency-stat-item">
+                            <span class="latency-stat-label">MAX</span>
+                            <span class="latency-stat-val" id="ping-max">0 ms</span>
                         </div>
                     </div>
                     <div class="metric-footer" style="display: flex; flex-direction: column; gap: 5px;">
